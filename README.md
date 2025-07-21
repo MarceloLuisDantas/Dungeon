@@ -1,2 +1,2 @@
-# Light-ASCII
-Simples light simulation in a small dungelon on terminal.
+# Dungeon
+Simples dungeon generator in C
