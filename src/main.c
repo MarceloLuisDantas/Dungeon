@@ -18,14 +18,11 @@ typedef struct Map {
     size_t height;
 } Map;
 
-typedef struct Point {
-    size_t x;
-    size_t y;
-} Point;
-
 typedef struct Room {
-    Point *from;
-    Point *to;
+    size_t x1;
+    size_t y1;
+    size_t x2;
+    size_t y2;
 } Room;
 
 Map *new_map(size_t x, size_t y) {
@@ -46,77 +43,64 @@ Map *new_map(size_t x, size_t y) {
     return m;
 }
 
-Point *new_point(size_t x, size_t y) {
-    Point *p = malloc(sizeof(Point));
-    p->x = x;
-    p->y = y;
-    return p;
-}
-
-Room *new_room(Point *from, Point *to) {
-    Room *room = malloc(sizeof(Room));
-    room->from = new_point(from->x, from->y);
-    room->to = new_point(to->x, to->y);
-    return room;
-}
-
 size_t random_range(size_t min, size_t max) {
-    srand(time(NULL));
     return rand() % (max - min + 1) + min;
 }
 
-bool check_if_point_in_map(Point *p) {
-    if (p->x < 0 || p->x >= width)
+Room generate_random_room() {
+    size_t start_x = random_range(0, width);
+    size_t start_y = random_range(0, height);
+    Room room = {
+        .x1 = start_x,
+        .y1 = start_y,
+        .x2 = start_x + random_range(MIN_ROO_W, MAX_ROO_W),
+        .y2 = start_y + random_range(MIN_ROO_H, MAX_ROO_H)
+    };
+    return room;
+}
+
+bool check_if_point_in_map(size_t x, size_t y) {
+    if (x < 0 || x >= width)
         return false;
-    if (p->y < 0 || p->y >= height) 
+    if (y < 0 || y >= height)
         return false;
     return true;
 }
 
-Room *generate_random_room() {
-    size_t room_w = random_range(MIN_ROO_W, MAX_ROO_W);
-    size_t room_h = random_range(MIN_ROO_H, MAX_ROO_H);
-    size_t start_x = random_range(0, width);
-    size_t start_y = random_range(0, height);
-    Point *from = new_point(start_x, start_y);
-    Point *to = new_point(start_x + room_w, start_y + room_h);
-    return new_room(from, to);
-}
-
-
 bool check_if_room_fits(Map *map, Room *room) {
-    if (!check_if_point_in_map(room->from))
+    if (!check_if_point_in_map(room->x1, room->y1))
         return false;
 
-    if (!check_if_point_in_map(room->to))
+    if (!check_if_point_in_map(room->x2, room->y2))
         return false;
         
-    for (size_t x = room->from->x; x <= room->to->x; x++)
-        if (map->map[x][room->from->y] == '#' || map->map[x][room->to->y] == '#')
+    for (size_t x = room->x1; x <= room->x2; x++)
+        if (map->map[x][room->y1] == '#' || map->map[x][room->y2] == '#')
             return false;
 
-    for (size_t y = room->from->y + 1; y <= room->to->y - 1; y++)
-        if (map->map[room->from->x][y] == '#' || map->map[room->to->x][y] == '#')
+    for (size_t y = room->y1 + 1; y <= room->y2 - 1; y++)
+        if (map->map[room->x1][y] == '#' || map->map[room->x2][y] == '#')
             return false;
 
     return true;
 }
 
 bool create_room(Map *map, Room *room) {
-    for (size_t x = room->from->x; x <= room->to->x; x++) {
-        map->map[x][room->from->y] = '#';
-        map->map[x][room->to->y] = '#';
+    for (size_t x = room->x1; x <= room->x2; x++) {
+        map->map[x][room->y1] = '#';
+        map->map[x][room->y2] = '#';
     }
 
-    for (size_t y = room->from->y + 1; y <= room->to->y - 1; y++) {
-        map->map[room->from->x][y] = '#';
-        map->map[room->to->x][y] = '#';
+    for (size_t y = room->y1 + 1; y <= room->y2 - 1; y++) {
+        map->map[room->x1][y] = '#';
+        map->map[room->x2][y] = '#';
     }
 
     return true;
 }
 
 int main() {
+    srand(time(NULL));
     initscr();
     nodelay(stdscr, TRUE);
     noecho();
@@ -127,11 +111,12 @@ int main() {
 
     Map *map = new_map(width, height);
 
-    size_t rooms_to_crete = 3;
+    Room room;
+    size_t rooms_to_crete = 6;
     while (rooms_to_crete != 0) {
-        Room *room = generate_random_room();
-        if (check_if_room_fits(map, room)) {
-            create_room(map, room);
+        room = generate_random_room();
+        if (check_if_room_fits(map, &room)) {
+            create_room(map, &room);
             
             for (size_t x = 0; x < width; x++)
                 for (size_t y = 0; y < height; y++)
@@ -139,9 +124,7 @@ int main() {
 
             rooms_to_crete -= 1;
         } 
-        free(room->from);
-        free(room->to);
-        free(room);
+
         refresh();
     }
 
