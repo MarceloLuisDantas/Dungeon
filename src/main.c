@@ -139,6 +139,8 @@ int main() {
 
             rooms_to_crete -= 1;
         } 
+        free(room->from);
+        free(room->to);
         free(room);
         refresh();
     }
