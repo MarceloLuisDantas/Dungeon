@@ -1,0 +1,15 @@
+{
+    "project": "Dungeon",
+    "tests": {
+        "test_main": [
+            "src/main.c"
+        ]
+    },
+    "test_flags": [
+        "-Wall",
+        "-g"
+    ],
+    "valgrind_flags": [
+        ""
+    ]
+}

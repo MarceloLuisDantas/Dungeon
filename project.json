@@ -1,0 +1,6 @@
+{
+  "project": "Dungeon",
+  "type": "bin",
+  "sources": ["src/main.c"],
+  "comp_flags": ["-Wall", "-lm", "-lncurses", "-g"]
+}
