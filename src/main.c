@@ -147,31 +147,27 @@ void draw_path(size_t x1, size_t y1, size_t x2, size_t y2) {
 }
 
 size_t distance(size_t x1, size_t x2, size_t y1, size_t y2) {
-    size_t dx = abs(x2 - x1);
-    size_t dy = abs(y2 - y1);
-    return sqrt(dx*dy + dy*dy);
+    size_t dx = x2 - x1;
+    size_t dy = y2 - y1;
+    return sqrt(dx*dx + dy*dy);
 }
 
 Point find_closer_center(Map *map, size_t i_center) {
     size_t x1 = map->centers[i_center];
     size_t y1 = map->centers[i_center + 1];
     
-    size_t closest_x = 0;
-    size_t closest_y = 0;
-    size_t last_distance = -1;
-    for (size_t p = 0; p < map->rooms - 2; p += 2) {
-        size_t x2 = map->centers[p];
-        size_t y2 = map->centers[p + 1];
-        if (x2 != x1 && y2 != y1) {
+    size_t closest_x;
+    size_t closest_y;
+    size_t shortest_d = -1;
+    for (size_t i = 0; i < map->rooms; i += 2) {
+        size_t x2 = map->centers[i];
+        size_t y2 = map->centers[i + 1];
+        if (x1 != x2 && y1 != y2) {
             size_t d = distance(x1, y1, x2, y2);
-            if (last_distance == -1) {
-                last_distance = d;
-            } else {
-                if (last_distance > d) {
-                    last_distance = d;
-                    closest_x = x2;
-                    closest_y = y2;
-                }
+            if (d < shortest_d || shortest_d == -1) {
+                shortest_d = d;
+                closest_x = x2;
+                closest_y = y2;
             }
         }
     }
@@ -208,17 +204,11 @@ int main() {
         room = generate_random_room();
         if (check_if_room_fits(map, &room)) {
             create_room(map, &room);
-            
             for (size_t x = 0; x < width; x++)
                 for (size_t y = 0; y < height; y++)
                     mvprintw(y + 1, x + 1, "%c", map->map[x][y]);
 
             refresh();
-            while (true) {
-            int ch = getch();
-                if (ch == 'q')
-                    break;
-            }
             rooms_to_create -= 1;
         } 
 
@@ -230,7 +220,7 @@ int main() {
     for (size_t i = 0; i < map->rooms; i += 2)
         mvprintw(map->centers[i + 1], map->centers[i], "c");
         
-    for (size_t i = 0; i < map->rooms - 2; i += 2) {
+    for (size_t i = 0; i < map->rooms; i += 2) {
         Point next = find_closer_center(map, i);
         draw_path(map->centers[i], map->centers[i + 1], next.x, next.y);
         refresh();
